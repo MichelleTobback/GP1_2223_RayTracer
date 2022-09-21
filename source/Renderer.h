@@ -8,6 +8,7 @@ struct SDL_Surface;
 namespace dae
 {
 	class Scene;
+	struct Vector3;
 
 	class Renderer final
 	{
@@ -31,5 +32,7 @@ namespace dae
 
 		int m_Width{};
 		int m_Height{};
+
+		Vector3 RasterSpaceToCameraSpace(float x, float y, int width, int height) const;
 	};
 }

@@ -12,9 +12,35 @@ namespace dae
 		//SPHERE HIT-TESTS
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			assert(false && "No Implemented Yet!");
-			return false;
+			//todo W1 - DONE
+
+			Vector3 sphereToRay{ ray.origin - sphere.origin };
+
+			float a{ Vector3::Dot(ray.direction, ray.direction) };
+			float b{Vector3::Dot(2.f * ray.direction, sphereToRay)};
+			float c{Vector3::Dot(sphereToRay, sphereToRay) - Square(sphere.radius)};
+
+			float discriminant{Square(b) - 4.f * a * c};
+
+			if (discriminant > 0.f)
+			{
+				if (IsInRange(discriminant, ray.min, ray.max))
+				{
+					hitRecord.t = ( -b - sqrtf(discriminant)) / (2.f * a);
+					if (hitRecord.t < ray.min)
+						hitRecord.t = (-b + sqrtf(discriminant)) / (2.f * a);
+
+					hitRecord.origin = ray.origin + hitRecord.t * ray.direction;
+					hitRecord.didHit = true;
+					hitRecord.materialIndex = sphere.materialIndex;
+				}
+			}
+			else
+			{
+				hitRecord.didHit = false;
+			}
+
+			return hitRecord.didHit;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -27,9 +53,23 @@ namespace dae
 		//PLANE HIT-TESTS
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			//todo W1
-			assert(false && "No Implemented Yet!");
-			return false;
+			//todo W1 - DONE
+			
+			Vector3 rayToPlane{plane.origin - ray.origin};
+			float distance{Vector3::Dot(rayToPlane, plane.normal) / Vector3::Dot(ray.direction, plane.normal)};
+
+			if (IsInRange(distance, ray.min, ray.max))
+			{
+				hitRecord.t = distance;
+				hitRecord.origin = ray.origin + distance * ray.direction;
+				hitRecord.didHit = true;
+				hitRecord.materialIndex = plane.materialIndex;
+			}
+			else
+				hitRecord.didHit = false;
+
+
+			return hitRecord.didHit;
 		}
 
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray)

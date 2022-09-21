@@ -27,4 +27,9 @@ namespace dae
 	{
 		return abs(a - b) < epsilon;
 	}
+
+	inline bool IsInRange(float value, float min, float max)
+	{
+		return (value >= min && value <= max);
+	}
 }

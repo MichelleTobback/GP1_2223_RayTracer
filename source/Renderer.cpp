@@ -31,11 +31,24 @@ void Renderer::Render(Scene* pScene) const
 	{
 		for (int py{}; py < m_Height; ++py)
 		{
-			float gradient = px / static_cast<float>(m_Width);
-			gradient += py / static_cast<float>(m_Width);
-			gradient /= 2.0f;
+			//float gradient = px / static_cast<float>(m_Width);
+			//gradient += py / static_cast<float>(m_Width);
+			//gradient /= 2.0f;
+			//
+			//ColorRGB finalColor{ gradient, gradient, gradient };
 
-			ColorRGB finalColor{ gradient, gradient, gradient };
+			Vector3 direction{ RasterSpaceToCameraSpace( float(px), float(py), m_Width, m_Height ) };
+			Ray hitRay{ {0.f, 0.f, 0.f}, direction };
+
+			ColorRGB finalColor{};
+			HitRecord hitStats{};
+
+			pScene->GetClosestHit(hitRay, hitStats);
+
+			if (hitStats.didHit)
+			{
+				finalColor = materials[hitStats.materialIndex]->Shade();
+			}
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();
@@ -55,4 +68,17 @@ void Renderer::Render(Scene* pScene) const
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
+}
+
+Vector3 Renderer::RasterSpaceToCameraSpace(float x, float y, int width, int height) const
+{
+	x += 0.5f;
+	y += 0.5f;
+
+	Vector3 result{};
+	result.x = ((2.f * x / float(width)) - 1.f) * (float(width) / float(height));
+	result.y = 1.f - (2.f * y / float(height));
+	result.z = 1.f;
+
+	return result.Normalized();
 }

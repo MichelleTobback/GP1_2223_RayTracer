@@ -33,6 +33,7 @@ namespace dae
 		int m_Width{};
 		int m_Height{};
 
-		Vector3 RasterSpaceToCameraSpace(float x, float y, int width, int height) const;
+		Vector3 RasterSpaceToCameraSpace(float x, float y, int width, int height, float fovAngle) const;
+
 	};
 }

@@ -35,13 +35,18 @@ namespace dae
 		Matrix CalculateCameraToWorld()
 		{
 			//todo: W2
-			assert(false && "Not Implemented Yet");
-			return {};
+			right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
+			up = Vector3::Cross(forward, right).Normalized();
+
+			cameraToWorld = { right, up, forward, origin };
+			return cameraToWorld;
 		}
 
 		void Update(Timer* pTimer)
 		{
 			const float deltaTime = pTimer->GetElapsed();
+			const float movementSpeed{ 5.f };
+			const float rotSpeed{PI_DIV_4 / 2.f};
 
 			//Keyboard Input
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
@@ -52,7 +57,64 @@ namespace dae
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
 			//todo: W2
-			//assert(false && "Not Implemented Yet");
-		}
+			bool hasMoved{ false };
+			if (pKeyboardState[SDL_SCANCODE_W])
+			{
+				origin += (forward * movementSpeed * deltaTime);
+				hasMoved = true;
+			}
+			else if (pKeyboardState[SDL_SCANCODE_S])
+			{
+				origin -= (forward * movementSpeed * deltaTime);
+				hasMoved = true;
+			}
+
+			if (pKeyboardState[SDL_SCANCODE_D])
+			{
+				origin += (right * movementSpeed * deltaTime);
+				hasMoved = true;
+			}
+			else if (pKeyboardState[SDL_SCANCODE_A])
+			{
+				origin -= (right * movementSpeed * deltaTime);
+				hasMoved = true;
+			}
+
+			bool hasRotated{false};
+			if (mouseState & SDL_BUTTON(3))
+			{
+				totalYaw += mouseX * rotSpeed * deltaTime;
+				totalPitch -= mouseY * rotSpeed * deltaTime;
+				hasRotated = true;
+				hasMoved = true;
+			}
+			if (mouseState & SDL_BUTTON(1))
+			{
+				totalYaw += mouseX * rotSpeed * deltaTime;
+				origin += forward * -mouseY * movementSpeed * deltaTime;
+				hasRotated = true;
+				hasMoved = true;
+			}
+			if (totalPitch >= PI_2)
+				totalPitch = 0.f;
+			if (totalPitch < 0.f)
+				totalPitch = PI_2;
+			if (totalYaw >= PI_2)
+				totalYaw = 0.f;
+			if (totalYaw < 0.f)
+				totalYaw = PI_2;
+
+			if (hasRotated)
+			{
+				Matrix rotMat{ Matrix::CreateRotation(totalPitch, totalYaw, 0.f) };
+				forward = rotMat.TransformVector(Vector3::UnitZ);
+				forward.Normalize();
+			}
+			if (hasMoved)
+			{
+				CalculateCameraToWorld();
+			}
+		}	
+
 	};
 }

@@ -22,18 +22,19 @@ namespace dae
 
 			float discriminant{Square(b) - 4.f * a * c};
 
-			if (discriminant > 0.f)
+			if (discriminant > 0.f && IsInRange(discriminant, ray.min, ray.max))
 			{
-				if (IsInRange(discriminant, ray.min, ray.max))
+				hitRecord.t = (-b - sqrtf(discriminant)) / (2.f * a);
+				if (!IsInRange(hitRecord.t, ray.min, ray.max))
 				{
-					hitRecord.t = ( -b - sqrtf(discriminant)) / (2.f * a);
-					if (hitRecord.t < ray.min)
-						hitRecord.t = (-b + sqrtf(discriminant)) / (2.f * a);
-
-					hitRecord.origin = ray.origin + hitRecord.t * ray.direction;
-					hitRecord.didHit = true;
-					hitRecord.materialIndex = sphere.materialIndex;
+					hitRecord.t = (-b + sqrtf(discriminant)) / (2.f * a);
+					if (!IsInRange(hitRecord.t, ray.min, ray.max))
+						return false;
 				}
+
+				hitRecord.origin = ray.origin + hitRecord.t * ray.direction;
+				hitRecord.didHit = true;
+				hitRecord.materialIndex = sphere.materialIndex;
 			}
 			else
 			{

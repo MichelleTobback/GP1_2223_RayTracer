@@ -6,6 +6,8 @@
 #include "Math.h"
 #include "Timer.h"
 
+#include <iostream>
+
 namespace dae
 {
 	struct Camera
@@ -45,7 +47,7 @@ namespace dae
 		void Update(Timer* pTimer)
 		{
 			const float deltaTime = pTimer->GetElapsed();
-			const float movementSpeed{ 5.f };
+			const float movementSpeed{ 8.f };
 			const float rotSpeed{PI_DIV_4 / 2.f};
 
 			//Keyboard Input
@@ -81,20 +83,29 @@ namespace dae
 			}
 
 			bool hasRotated{false};
-			if (mouseState & SDL_BUTTON(3))
+			if (mouseState & SDL_BUTTON(1) && mouseState & SDL_BUTTON(3))
 			{
-				totalYaw += mouseX * rotSpeed * deltaTime;
-				totalPitch -= mouseY * rotSpeed * deltaTime;
-				hasRotated = true;
+				origin -= (up * movementSpeed * deltaTime * mouseY);
 				hasMoved = true;
 			}
-			if (mouseState & SDL_BUTTON(1))
+			else
 			{
-				totalYaw += mouseX * rotSpeed * deltaTime;
-				origin += forward * -mouseY * movementSpeed * deltaTime;
-				hasRotated = true;
-				hasMoved = true;
+				if (mouseState & SDL_BUTTON(3))
+				{
+					totalYaw += mouseX * rotSpeed * deltaTime;
+					totalPitch -= mouseY * rotSpeed * deltaTime;
+					hasRotated = true;
+					hasMoved = true;
+				}
+				else if (mouseState & SDL_BUTTON(1))
+				{
+					totalYaw += mouseX * rotSpeed * deltaTime;
+					origin += forward * -mouseY * movementSpeed * deltaTime;
+					hasRotated = true;
+					hasMoved = true;
+				}
 			}
+			
 			if (totalPitch >= PI_2)
 				totalPitch = 0.f;
 			if (totalPitch < 0.f)
@@ -114,6 +125,8 @@ namespace dae
 			{
 				CalculateCameraToWorld();
 			}
+			std::cout << "pitch: " << std::to_string(totalPitch) << '\n';
+			std::cout << "yaw: " << std::to_string(totalYaw) << '\n';
 		}	
 
 	};

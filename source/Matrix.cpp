@@ -116,7 +116,7 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		//todo W1
+		//todo W1 - DONE
 		float cos{ cosf(pitch) };
 		float sin{ sinf(pitch) };
 		
@@ -133,7 +133,7 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		//todo W1
+		//todo W1 - DONE
 		float cos{ cosf(yaw) };
 		float sin{ sinf(yaw) };
 
@@ -150,7 +150,7 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		//todo W1
+		//todo W1 - DONE
 		float cos{ cosf(roll) };
 		float sin{ sinf(roll) };
 
@@ -167,9 +167,9 @@ namespace dae {
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		//todo W1
+		//todo W1 - DONE
 
-		return CreateRotationY(r.y) * CreateRotationX(r.x) * CreateRotationZ(r.z);
+		return  CreateRotationX(r.x) * CreateRotationY(r.y) * CreateRotationZ(r.z);
 	}
 
 	Matrix Matrix::CreateRotation(float pitch, float yaw, float roll)

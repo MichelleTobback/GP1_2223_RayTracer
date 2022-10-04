@@ -50,18 +50,18 @@ namespace dae {
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
-		//todo W3
+		//todo W3 - DONE
 		HitRecord hitStats{};
 
 		for (const Sphere& sphere : m_SphereGeometries)
 		{
-			if (GeometryUtils::HitTest_Sphere(sphere, ray, hitStats))
+			if (GeometryUtils::HitTest_Sphere(sphere, ray, hitStats, true))
 				return true;
 		}
 
 		for (const Plane& plane : m_PlaneGeometries)
 		{
-			if (GeometryUtils::HitTest_Plane(plane, ray, hitStats))
+			if (GeometryUtils::HitTest_Plane(plane, ray, hitStats, true))
 				return true;
 		}
 

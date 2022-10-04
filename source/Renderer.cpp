@@ -49,8 +49,8 @@ void Renderer::Render(Scene* pScene) const
 				{
 					Ray toLightRay{};
 					Vector3 directionToLight{light.origin - hitStats.origin};
-					toLightRay.max = directionToLight.Normalize();
-					Vector3 toLightOrigin{ hitStats.origin + directionToLight * toLightRay.min};
+					toLightRay.max = directionToLight.Normalize() - 1.f;
+					Vector3 toLightOrigin{ hitStats.origin + hitStats.normal};
 
 					toLightRay.direction = directionToLight;
 					toLightRay.origin = toLightOrigin;

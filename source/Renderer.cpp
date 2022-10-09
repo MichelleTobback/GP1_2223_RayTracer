@@ -31,10 +31,10 @@ void Renderer::Render(Scene* pScene) const
 	{
 		for (int py{}; py < m_Height; ++py)
 		{
-			Vector3 direction{ RasterSpaceToCameraSpace( float(px), float(py), m_Width, m_Height, camera.fovAngle ) };
-			direction = camera.cameraToWorld.TransformVector(direction);
+			Vector3 rayDirection{ RasterSpaceToCameraSpace( float(px), float(py), m_Width, m_Height, camera.fovAngle ) };
+			rayDirection = camera.cameraToWorld.TransformVector(rayDirection);
 			
-			Ray hitRay{ camera.origin, direction };
+			Ray hitRay{ camera.origin, rayDirection };
 
 			ColorRGB finalColor{};
 			HitRecord hitStats{};
@@ -43,21 +43,49 @@ void Renderer::Render(Scene* pScene) const
 
 			if (hitStats.didHit)
 			{
-				finalColor = materials[hitStats.materialIndex]->Shade();
+				finalColor = { 0.f, 0.f, 0.f };
 
 				for (const Light& light : lights)
 				{
-					Ray toLightRay{};
 					Vector3 directionToLight{light.origin - hitStats.origin};
-					toLightRay.max = directionToLight.Normalize() - 1.f;
-					Vector3 toLightOrigin{ hitStats.origin + hitStats.normal};
+					Ray toLightRay{};
+					toLightRay.max = directionToLight.Normalize();
+					toLightRay.min = 0.001f;
 
 					toLightRay.direction = directionToLight;
-					toLightRay.origin = toLightOrigin;
-					
-					if (pScene->DoesHit(toLightRay))
+					toLightRay.origin = hitStats.origin;
+
+					bool canSeeLight{ (m_ShadowEnabled) ? !pScene->DoesHit(toLightRay) : true };
+
+					ColorRGB brdfRgb{ materials[hitStats.materialIndex]->Shade(hitStats, directionToLight, -rayDirection)};
+
+					if (canSeeLight)
 					{
-						finalColor *= 0.5f;
+						float cosTheta{ Vector3::Dot(hitStats.normal, directionToLight) }; 
+						if (cosTheta < 0.f)
+						{
+							cosTheta = 0.f;
+						}
+
+						switch (m_LightingMode)
+						{
+						case LightingMode::ObservedArea:
+							finalColor += ColorRGB{ 1.f, 1.f, 1.f } * cosTheta;
+							break;
+
+						case LightingMode::Radiance:
+							finalColor += LightUtils::GetRadiance(light, hitStats.origin);
+							break;
+
+						case LightingMode::BRDF:
+							finalColor += brdfRgb;
+							break;
+
+						case LightingMode::Combined:
+							ColorRGB radiance{ LightUtils::GetRadiance(light, hitStats.origin) };
+							finalColor += radiance * brdfRgb * cosTheta;
+							break;
+						}
 					}
 				}
 			}

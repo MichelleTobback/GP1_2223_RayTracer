@@ -6,8 +6,6 @@
 #include "Math.h"
 #include "Timer.h"
 
-#include <iostream>
-
 namespace dae
 {
 	struct Camera
@@ -85,22 +83,22 @@ namespace dae
 			bool hasRotated{false};
 			if (mouseState & SDL_BUTTON(1) && mouseState & SDL_BUTTON(3))
 			{
-				origin -= (up * movementSpeed * deltaTime * mouseY);
+				origin -= (up * movementSpeed * deltaTime * float(mouseY));
 				hasMoved = true;
 			}
 			else
 			{
 				if (mouseState & SDL_BUTTON(3))
 				{
-					totalYaw += mouseX * rotSpeed * deltaTime;
-					totalPitch -= mouseY * rotSpeed * deltaTime;
+					totalYaw += float(mouseX) * rotSpeed * deltaTime;
+					totalPitch -= float(mouseY) * rotSpeed * deltaTime;
 					hasRotated = true;
 					hasMoved = true;
 				}
 				else if (mouseState & SDL_BUTTON(1))
 				{
-					totalYaw += mouseX * rotSpeed * deltaTime;
-					origin += forward * -mouseY * movementSpeed * deltaTime;
+					totalYaw += float(mouseX) * rotSpeed * deltaTime;
+					origin += forward * -float(mouseY) * movementSpeed * deltaTime;
 					hasRotated = true;
 					hasMoved = true;
 				}
@@ -125,8 +123,6 @@ namespace dae
 			{
 				CalculateCameraToWorld();
 			}
-			std::cout << "pitch: " << std::to_string(totalPitch) << '\n';
-			std::cout << "yaw: " << std::to_string(totalYaw) << '\n';
 		}	
 
 	};

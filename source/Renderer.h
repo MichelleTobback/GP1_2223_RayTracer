@@ -24,6 +24,9 @@ namespace dae
 		void Render(Scene* pScene) const;
 		bool SaveBufferToImage() const;
 
+		void ToggleShadows() { m_ShadowEnabled = !m_ShadowEnabled; }
+		void ToggleLightingMode() { m_LightingMode = (int(m_LightingMode) < 3) ? LightingMode(int(m_LightingMode) + 1) : LightingMode(0); }
+
 	private:
 		SDL_Window* m_pWindow{};
 
@@ -32,6 +35,17 @@ namespace dae
 
 		int m_Width{};
 		int m_Height{};
+
+		enum class LightingMode
+		{
+			ObservedArea = 0,
+			Radiance = 1,
+			BRDF = 2,
+			Combined = 3
+		};
+
+		LightingMode m_LightingMode{ LightingMode::ObservedArea };
+		bool m_ShadowEnabled{ true };
 
 		Vector3 RasterSpaceToCameraSpace(float x, float y, int width, int height, float fovAngle) const;
 

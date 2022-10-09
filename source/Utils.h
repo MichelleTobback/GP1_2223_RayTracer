@@ -35,6 +35,7 @@ namespace dae
 				hitRecord.origin = ray.origin + hitRecord.t * ray.direction;
 				hitRecord.didHit = true;
 				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
 			}
 			else
 			{
@@ -65,6 +66,7 @@ namespace dae
 				hitRecord.origin = ray.origin + distance * ray.direction;
 				hitRecord.didHit = true;
 				hitRecord.materialIndex = plane.materialIndex;
+				hitRecord.normal = plane.normal;
 			}
 			else
 				hitRecord.didHit = false;
@@ -116,15 +118,27 @@ namespace dae
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			return light.origin - origin;
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
 			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+
+			ColorRGB returnColor{};
+
+			switch (light.type)
+			{
+			case LightType::Directional:
+				break;
+
+			case LightType::Point:
+				float irradians{light.intensity / GetDirectionToLight(light, target).SqrMagnitude()};
+				returnColor = light.color * irradians;
+				break;
+			}
+
+			return returnColor;
 		}
 	}
 

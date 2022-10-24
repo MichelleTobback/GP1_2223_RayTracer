@@ -82,12 +82,93 @@ namespace dae
 		}
 #pragma endregion
 #pragma region Triangle HitTest
+		//TRIANGLE HIT-TEST HELPER FUNCTIONS
+		inline bool UseCulling(TriangleCullMode cullMode, float dotNV, bool ignoreHitRecord)
+		{
+			if (!ignoreHitRecord)
+			{
+				switch (cullMode)
+				{
+				case TriangleCullMode::BackFaceCulling:
+					if (dotNV > 0.f)
+						return true;
+					break;
+				case TriangleCullMode::FrontFaceCulling:
+					if (dotNV < 0.f)
+						return true;
+					break;
+				}
+			}
+			else
+			{
+				switch (cullMode)
+				{
+				case TriangleCullMode::BackFaceCulling:
+					if (dotNV < 0.f)
+						return true;
+					break;
+				case TriangleCullMode::FrontFaceCulling:
+					if (dotNV > 0.f)
+						return true;
+					break;
+				}
+			}
+			return false;
+		}
+
+		inline bool IsPointAtCorrectSide(Vector3 point, Vector3 v0, Vector3 v1, Vector3 normal)
+		{
+			Vector3 edge{ v1 - v0 };
+			Vector3 pointToSide{ point - v0 };
+			if (Vector3::Dot(normal, Vector3::Cross(edge, pointToSide)) < 0.f)
+				return false;
+
+			return true;
+		}
+
 		//TRIANGLE HIT-TESTS
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			float dot{ Vector3::Dot(triangle.normal, ray.direction) };
+			float epsilon{ 0.01f };
+
+			if (dot > -epsilon && dot < epsilon)
+			{
+				return false;
+			}
+
+			if (UseCulling(triangle.cullMode, dot, ignoreHitRecord))
+				return false;
+
+			Vector3 center{ (triangle.v0 + triangle.v1 + triangle.v2) / 3.f };
+			Vector3 l{ center - ray.origin };
+			float distance{ Vector3::Dot(l, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal)};
+
+			if (distance < ray.min || distance > ray.max)
+				return false;
+
+			Vector3 pointOnPlane{ ray.origin + ray.direction * distance };
+
+			if (!IsPointAtCorrectSide(pointOnPlane, triangle.v0, triangle.v1, triangle.normal))
+				return false;
+
+			if (!IsPointAtCorrectSide(pointOnPlane, triangle.v1, triangle.v2, triangle.normal))
+				return false;
+
+			if (!IsPointAtCorrectSide(pointOnPlane, triangle.v2, triangle.v0, triangle.normal))
+				return false;
+
+			if (!ignoreHitRecord)
+			{
+				hitRecord.didHit = true;
+				hitRecord.materialIndex = triangle.materialIndex;
+				hitRecord.normal = triangle.normal;
+				hitRecord.origin = pointOnPlane;
+				hitRecord.t = distance;
+			}
+
+			return true;
 		}
 
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray)
@@ -95,13 +176,41 @@ namespace dae
 			HitRecord temp{};
 			return HitTest_Triangle(triangle, ray, temp, true);
 		}
+
 #pragma endregion
 #pragma region TriangeMesh HitTest
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			const int triangleVertAmount{ 3 };
+			float shortestDistance{ ray.max + 1.f };
+			HitRecord currentRecord{};
+			bool didHit{ false };
+			int triangleCount{0};
+
+			for (size_t i{}; (i + triangleVertAmount) <= mesh.indices.size(); i += triangleVertAmount)
+			{
+				uint32_t i0 = mesh.indices[i];
+				uint32_t i1 = mesh.indices[i + 1];
+				uint32_t i2 = mesh.indices[i + 2];
+
+				Triangle triangle{ mesh.transformedPositions[i0], mesh.transformedPositions[i1], mesh.transformedPositions[i2], mesh.transformedNormals[triangleCount]};
+				triangle.cullMode = mesh.cullMode;
+				triangle.materialIndex = mesh.materialIndex;
+
+				if (HitTest_Triangle(triangle, ray, currentRecord, ignoreHitRecord))
+				{
+					if (currentRecord.t < shortestDistance)
+					{
+						hitRecord = currentRecord;
+						shortestDistance = currentRecord.t;
+						didHit = true;
+					}
+				}
+				++triangleCount;
+			}
+
+			return didHit;
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)

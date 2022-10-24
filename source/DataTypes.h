@@ -60,8 +60,12 @@ namespace dae
 		TriangleMesh(const std::vector<Vector3>& _positions, const std::vector<int>& _indices, TriangleCullMode _cullMode):
 		positions(_positions), indices(_indices), cullMode(_cullMode)
 		{
+
 			//Calculate Normals
 			CalculateNormals();
+
+			transformedPositions.reserve(_positions.size());
+			transformedNormals.reserve(normals.size());
 
 			//Update Transforms
 			UpdateTransforms();
@@ -70,6 +74,9 @@ namespace dae
 		TriangleMesh(const std::vector<Vector3>& _positions, const std::vector<int>& _indices, const std::vector<Vector3>& _normals, TriangleCullMode _cullMode) :
 			positions(_positions), indices(_indices), normals(_normals), cullMode(_cullMode)
 		{
+			transformedPositions.reserve(_positions.size());
+			transformedNormals.reserve(_normals.size());
+
 			UpdateTransforms();
 		}
 
@@ -123,20 +130,42 @@ namespace dae
 
 		void CalculateNormals()
 		{
-			assert(false && "No Implemented Yet!");
+			const int triangleVertAmount{ 3 };
+
+			for (int i{}; (i + triangleVertAmount) <= indices.size(); i += triangleVertAmount)
+			{
+				normals.emplace_back(CalculateNormal(positions[indices[i]], positions[indices[i + 1]], positions[indices[i + 2]]));
+			}
 		}
 
 		void UpdateTransforms()
 		{
-			assert(false && "No Implemented Yet!");
 			//Calculate Final Transform 
 			//const auto finalTransform = ...
+			const Matrix trs{ scaleTransform * rotationTransform * translationTransform };
+
+			transformedPositions.clear();
+			transformedNormals.clear();
 
 			//Transform Positions (positions > transformedPositions)
-			//...
+			for (int i{}; i < positions.size(); i++)
+			{
+				transformedPositions.emplace_back(trs.TransformPoint(positions[i]));
+			}
 
 			//Transform Normals (normals > transformedNormals)
-			//...
+			for (int i{}; i < normals.size(); i++)
+			{
+				transformedNormals.emplace_back(trs.TransformVector(normals[i]).Normalized());
+			}
+		}
+
+	private:
+		Vector3 CalculateNormal(const Vector3& v0, const Vector3& v1, const Vector3& v2)
+		{
+			Vector3 edgeA{ v1 - v0 };
+			Vector3 edgeB{ v2 - v0 };
+			return Vector3::Cross(edgeA, edgeB).Normalized();
 		}
 	};
 #pragma endregion

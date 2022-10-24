@@ -13,6 +13,9 @@ namespace dae {
 		m_PlaneGeometries.reserve(32);
 		m_TriangleMeshGeometries.reserve(32);
 		m_Lights.reserve(32);
+
+		// temp
+		m_Triangles.reserve(32);
 	}
 
 	Scene::~Scene()
@@ -46,6 +49,20 @@ namespace dae {
 			if (currentHitStats.didHit && currentHitStats.t < closestHit.t)
 				closestHit = currentHitStats;
 		}
+
+		//for (const Triangle& triangle : m_Triangles)
+		//{
+		//	GeometryUtils::HitTest_Triangle(triangle, ray, currentHitStats);
+		//	if (currentHitStats.didHit && currentHitStats.t < closestHit.t)
+		//		closestHit = currentHitStats;
+		//}
+
+		for (const TriangleMesh& triangleMesh : m_TriangleMeshGeometries)
+		{
+			GeometryUtils::HitTest_TriangleMesh(triangleMesh, ray, currentHitStats);
+			if (currentHitStats.didHit && currentHitStats.t < closestHit.t)
+				closestHit = currentHitStats;
+		}
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
@@ -62,6 +79,18 @@ namespace dae {
 		for (const Plane& plane : m_PlaneGeometries)
 		{
 			if (GeometryUtils::HitTest_Plane(plane, ray, hitStats, true))
+				return true;
+		}
+
+		//for (const Triangle& triangle : m_Triangles)
+		//{
+		//	if (GeometryUtils::HitTest_Triangle(triangle, ray, hitStats, true))
+		//		return true;
+		//}
+
+		for (const TriangleMesh& triangleMesh : m_TriangleMeshGeometries)
+		{
+			if (GeometryUtils::HitTest_TriangleMesh(triangleMesh, ray, hitStats, true))
 				return true;
 		}
 
@@ -255,5 +284,169 @@ namespace dae {
 		AddPointLight({ 0.f,  5.f,   5.f }, 25.f, colors::White);
 		AddPointLight({ 0.f,  2.5f, -5.f }, 25.f, colors::White);
 	}
+#pragma endregion
+
+#pragma region Week4
+	void Scene_W4_ReferenceScene::Initialize()
+	{
+		m_Camera.origin = { 0.f, 3.f, -9.f };
+		m_Camera.fovAngle = 45.f;
+
+		const auto matCT_GrayRoughMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.f, 1.f));
+		const auto matCT_GrayMediumMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.f, 0.6f));
+		const auto matCT_GraySmoothMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.f, 0.1f));
+		const auto matCT_GrayRoughPlastic = AddMaterial(new Material_CookTorrence({ 0.75f, 0.75f, 0.75f }, 0.f, 1.f));
+		const auto matCT_GrayMediumPlastic = AddMaterial(new Material_CookTorrence({ 0.75f, 0.75f, 0.75f }, 0.f, 0.6f));
+		const auto matCT_GraySmoothPlastic = AddMaterial(new Material_CookTorrence({ 0.75f, 0.75f, 0.75f }, 0.f, 0.1f));
+
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+		//plane
+		AddPlane({ 0.f,  0.f, 10.f }, { 0.f,  0.f, -1.f }, matLambert_GrayBlue);
+		AddPlane({ 0.f,  0.f,  0.f }, { 0.f,  1.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({ 0.f, 10.f,  0.f }, { 0.f, -1.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({ 5.f,  0.f,  0.f }, {-1.f,  0.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({-5.f,  0.f,  0.f }, { 1.f,  0.f,  0.f }, matLambert_GrayBlue);
+
+		//Spheres
+		AddSphere({-1.75f, 1.f, 0.f }, .75f, matCT_GrayRoughMetal);
+		AddSphere({ 0.f,   1.f, 0.f }, .75f, matCT_GrayMediumMetal);
+		AddSphere({ 1.75f, 1.f, 0.f }, .75f, matCT_GraySmoothMetal);
+		AddSphere({-1.75f, 3.f, 0.f }, .75f, matCT_GrayRoughPlastic);
+		AddSphere({ 0.f,   3.f, 0.f }, .75f, matCT_GrayMediumPlastic);
+		AddSphere({ 1.75f, 3.f, 0.f }, .75f, matCT_GraySmoothPlastic);
+
+		//CW Winding order
+		const Triangle baseTriangle{ {-.75f, 1.5f, 0.f}, {0.75f, 0.f, 0.f}, {-0.75f, 0.f, 0.f} };
+
+		m_pMeshes[0] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
+		m_pMeshes[0]->AppendTriangle(baseTriangle, true);
+		m_pMeshes[0]->Translate({ -1.75f, 4.5f, 0.f });
+		m_pMeshes[0]->UpdateTransforms();
+
+		m_pMeshes[1] = AddTriangleMesh(TriangleCullMode::FrontFaceCulling, matLambert_White);
+		m_pMeshes[1]->AppendTriangle(baseTriangle, true);
+		m_pMeshes[1]->Translate({ 0.f, 4.5f, 0.f });
+		m_pMeshes[1]->UpdateTransforms();
+
+		m_pMeshes[2] = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
+		m_pMeshes[2]->AppendTriangle(baseTriangle, true);
+		m_pMeshes[2]->Translate({ 1.75f, 4.5f, 0.f });
+		m_pMeshes[2]->UpdateTransforms();
+
+		//light
+		AddPointLight({ 0.f,  5.f,   5.f }, 50.f, ColorRGB{ 1.f,   0.61f, 0.45f });
+		AddPointLight({-2.5f, 5.f,  -5.f }, 70.f, ColorRGB{ 1.f,   0.8f,  0.45f });
+		AddPointLight({ 2.5f, 2.5f, -5.f }, 50.f, ColorRGB{ 0.34f, 0.47f, 0.68f });
+	}
+
+	void Scene_W4_ReferenceScene::Update(Timer* pTimer)
+	{
+		Scene::Update(pTimer);
+
+		const auto yawAngle{ (cosf(pTimer->GetTotal()) + 1.f) / 2.f * PI_2 };
+		for (const auto pMesh : m_pMeshes)
+		{
+			pMesh->RotateY(yawAngle);
+			pMesh->UpdateTransforms();
+		}
+	}
+
+	void Scene_W4_test::Initialize()
+	{
+		m_Camera.origin = { 0.f, 1.f, -5.f };
+		m_Camera.fovAngle = 45.f;
+
+		//mat
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({0.49f, 0.57f, 0.57f}, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+		//plane
+		AddPlane({ 0.f,  0.f, 10.f }, { 0.f,  0.f, -1.f }, matLambert_GrayBlue);
+		AddPlane({ 0.f,  0.f,  0.f }, { 0.f,  1.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({ 0.f, 10.f,  0.f }, { 0.f, -1.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({ 5.f,  0.f,  0.f }, { -1.f,  0.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({ -5.f,  0.f,  0.f }, { 1.f,  0.f,  0.f }, matLambert_GrayBlue);
+
+		//temp triangle
+		//auto triangle = Triangle{ {-0.75f, 0.5f, 0.f}, {-0.75f, 2.f, 0.f}, {0.75f, 0.5f, 0.f} };
+		//triangle.cullMode = TriangleCullMode::NoCulling;
+		//triangle.materialIndex = matLambert_White;
+		//
+		//m_Triangles.emplace_back(triangle);
+
+		//Triangle Mesh
+		m_pMesh = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
+		//m_pMesh->positions = {
+		//	{-0.75f, -1.f, 0.f}, 
+		//	{-0.75f, 1.f, 0.f}, 
+		//	{0.75f, 1.f, 1.f}, 
+		//	{0.75f, -1.f, 0.f} };
+		//m_pMesh->indices =
+		//{
+		//	0, 1, 2,
+		//	0, 2, 3
+		//};
+		//
+		//m_pMesh->CalculateNormals();
+		//
+		//m_pMesh->Translate({ 0.f, 1.5f, 0.f });
+		Utils::ParseOBJ("Resources/simple_cube.obj",
+			m_pMesh->positions,
+			m_pMesh->normals,
+			m_pMesh->indices);
+
+		m_pMesh->Scale({ 0.7f, 0.7f, 0.7f });
+		m_pMesh->Translate({ 0.f, 1.f, 0.f });
+
+		m_pMesh->UpdateTransforms();
+
+		//light
+		AddPointLight({ 0.f,  5.f,   5.f }, 50.f, ColorRGB{ 1.f,   0.61f, 0.45f });
+		AddPointLight({ -2.5f, 5.f, -5.f }, 70.f, ColorRGB{ 1.f,   0.8f,  0.45f });
+		AddPointLight({ 2.5f, 2.5f, -5.f }, 50.f, ColorRGB{ 0.34f, 0.47f, 0.68f });
+	}
+	void Scene_W4_test::Update(Timer* pTimer)
+	{
+		Scene::Update(pTimer);
+
+		if (!m_pMesh)
+			return;
+		m_pMesh->RotateY(PI_DIV_2 * pTimer->GetTotal());
+		m_pMesh->UpdateTransforms();
+	}
+
+	void Scene_W4_BunnyScene::Initialize()
+	{
+		m_Camera.origin = { 0.f, 1.f, -5.f };
+		m_Camera.fovAngle = 45.f;
+
+		//mat
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+		//plane
+		AddPlane({ 0.f,  0.f, 10.f }, { 0.f,  0.f, -1.f }, matLambert_GrayBlue);
+		AddPlane({ 0.f,  0.f,  0.f }, { 0.f,  1.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({ 0.f, 10.f,  0.f }, { 0.f, -1.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({ 5.f,  0.f,  0.f }, {-1.f,  0.f,  0.f }, matLambert_GrayBlue);
+		AddPlane({-5.f,  0.f,  0.f }, { 1.f,  0.f,  0.f }, matLambert_GrayBlue);
+
+		//Triangle Mesh
+		m_pMesh = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
+		Utils::ParseOBJ("Resources/lowpoly_bunny2.obj",
+			m_pMesh->positions,
+			m_pMesh->normals,
+			m_pMesh->indices);
+
+		m_pMesh->UpdateTransforms();
+
+		//light
+		AddPointLight({ 0.f,  5.f,  5.f }, 50.f, ColorRGB{ 1.f,   0.61f, 0.45f });
+		AddPointLight({-2.5f, 5.f, -5.f }, 70.f, ColorRGB{ 1.f,   0.8f,  0.45f });
+		AddPointLight({ 2.5f, 2.5f,-5.f }, 50.f, ColorRGB{ 0.34f, 0.47f, 0.68f });
+	}
+
 #pragma endregion
 }

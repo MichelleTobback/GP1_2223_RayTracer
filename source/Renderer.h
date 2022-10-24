@@ -44,7 +44,7 @@ namespace dae
 			Combined = 3
 		};
 
-		LightingMode m_LightingMode{ LightingMode::ObservedArea };
+		LightingMode m_LightingMode{ LightingMode::Combined };
 		bool m_ShadowEnabled{ true };
 
 		Vector3 RasterSpaceToCameraSpace(float x, float y, int width, int height, float fovAngle) const;

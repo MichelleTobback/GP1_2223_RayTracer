@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 struct SDL_Window;
 struct SDL_Surface;
@@ -9,6 +10,9 @@ namespace dae
 {
 	class Scene;
 	struct Vector3;
+	class Material;
+	struct Light;
+	struct Camera;
 
 	class Renderer final
 	{
@@ -47,7 +51,8 @@ namespace dae
 		LightingMode m_LightingMode{ LightingMode::Combined };
 		bool m_ShadowEnabled{ true };
 
-		Vector3 RasterSpaceToCameraSpace(float x, float y, int width, int height, float fovAngle) const;
+		Vector3 RasterSpaceToCameraSpace(float x, float y, int width, int height, float aspectRatio, float fov) const;
+		void RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Camera& camera, const std::vector<Light>& lights, const std::vector<Material*>& pMaterials) const;
 
 	};
 }

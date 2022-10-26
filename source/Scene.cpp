@@ -323,16 +323,19 @@ namespace dae {
 		m_pMeshes[0] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
 		m_pMeshes[0]->AppendTriangle(baseTriangle, true);
 		m_pMeshes[0]->Translate({ -1.75f, 4.5f, 0.f });
+		m_pMeshes[0]->UpdateAABB();
 		m_pMeshes[0]->UpdateTransforms();
 
 		m_pMeshes[1] = AddTriangleMesh(TriangleCullMode::FrontFaceCulling, matLambert_White);
 		m_pMeshes[1]->AppendTriangle(baseTriangle, true);
 		m_pMeshes[1]->Translate({ 0.f, 4.5f, 0.f });
+		m_pMeshes[1]->UpdateAABB();
 		m_pMeshes[1]->UpdateTransforms();
 
 		m_pMeshes[2] = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
 		m_pMeshes[2]->AppendTriangle(baseTriangle, true);
 		m_pMeshes[2]->Translate({ 1.75f, 4.5f, 0.f });
+		m_pMeshes[2]->UpdateAABB();
 		m_pMeshes[2]->UpdateTransforms();
 
 		//light
@@ -377,7 +380,7 @@ namespace dae {
 		//m_Triangles.emplace_back(triangle);
 
 		//Triangle Mesh
-		m_pMesh = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
+		m_pMesh = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
 		//m_pMesh->positions = {
 		//	{-0.75f, -1.f, 0.f}, 
 		//	{-0.75f, 1.f, 0.f}, 
@@ -392,14 +395,15 @@ namespace dae {
 		//m_pMesh->CalculateNormals();
 		//
 		//m_pMesh->Translate({ 0.f, 1.5f, 0.f });
-		Utils::ParseOBJ("Resources/simple_cube.obj",
+		Utils::ParseOBJ("Resources/Table.obj",
 			m_pMesh->positions,
 			m_pMesh->normals,
 			m_pMesh->indices);
 
-		m_pMesh->Scale({ 0.7f, 0.7f, 0.7f });
-		m_pMesh->Translate({ 0.f, 1.f, 0.f });
+		m_pMesh->Scale({ 0.05f, 0.05f, 0.05f });
+		//m_pMesh->Translate({ 0.f, 1.f, 0.f });
 
+		m_pMesh->UpdateAABB();
 		m_pMesh->UpdateTransforms();
 
 		//light
@@ -440,6 +444,7 @@ namespace dae {
 			m_pMesh->normals,
 			m_pMesh->indices);
 
+		m_pMesh->UpdateAABB();
 		m_pMesh->UpdateTransforms();
 
 		//light

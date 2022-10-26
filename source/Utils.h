@@ -127,6 +127,7 @@ namespace dae
 		}
 
 		//TRIANGLE HIT-TESTS
+
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W5
@@ -179,8 +180,31 @@ namespace dae
 
 #pragma endregion
 #pragma region TriangeMesh HitTest
+		inline bool SlabTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
+		{
+			float tx1{ (mesh.transformedMinAABB.x - ray.origin.x) / ray.direction.x };
+			float tx2{ (mesh.transformedMaxAABB.x - ray.origin.x) / ray.direction.x };
+
+			float tmin{ std::min(tx1, tx2) };
+			float tmax{ std::max(tx1, tx2) };
+
+			float ty1{ (mesh.transformedMinAABB.y - ray.origin.y) / ray.direction.y };
+			float ty2{ (mesh.transformedMaxAABB.y - ray.origin.y) / ray.direction.y };
+
+			tmin = std::max(tmin, std::min(ty1, ty2));
+			tmax = std::min(tmax, std::max(ty1, ty2));
+
+			float tz1{ (mesh.transformedMinAABB.z - ray.origin.z) / ray.direction.z };
+			float tz2{ (mesh.transformedMaxAABB.z - ray.origin.z) / ray.direction.z };
+
+			return tmax > 0 && tmax >= tmin;
+		}
+
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
+			if (!SlabTest_TriangleMesh(mesh, ray))
+				return false;
+
 			//todo W5
 			const int triangleVertAmount{ 3 };
 			float shortestDistance{ ray.max + 1.f };
@@ -204,8 +228,8 @@ namespace dae
 					{
 						hitRecord = currentRecord;
 						shortestDistance = currentRecord.t;
-						didHit = true;
 					}
+					didHit = true;
 				}
 				++triangleCount;
 			}
